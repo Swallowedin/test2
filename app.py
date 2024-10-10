@@ -1,31 +1,23 @@
 import streamlit as st
-import requests
-import json
+from openai import OpenAI
 from tarifs_prestations import get_tarifs
 
-# Configuration de l'API OpenAI
-API_ENDPOINT = "https://api.openai.com/v1/chat/completions"
-API_KEY = st.secrets["OPENAI_API_KEY"]
+# Configuration du client OpenAI
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 def analyze_request(user_input):
-    """Analyse la demande de l'utilisateur avec ChatGPT en utilisant des requêtes HTTP directes."""
-    headers = {
-        "Authorization": f"Bearer {API_KEY}",
-        "Content-Type": "application/json"
-    }
-    data = {
-        "model": "gpt-3.5-turbo",
-        "messages": [
-            {"role": "system", "content": "Vous êtes un assistant juridique. Identifiez la prestation juridique demandée par l'utilisateur."},
-            {"role": "user", "content": user_input}
-        ]
-    }
-    
-    response = requests.post(API_ENDPOINT, headers=headers, data=json.dumps(data))
-    if response.status_code == 200:
-        return response.json()['choices'][0]['message']['content']
-    else:
-        st.error(f"Erreur lors de l'appel à l'API OpenAI: {response.status_code}")
+    """Analyse la demande de l'utilisateur avec ChatGPT."""
+    try:
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "Vous êtes un assistant juridique. Identifiez la prestation juridique demandée par l'utilisateur."},
+                {"role": "user", "content": user_input}
+            ]
+        )
+        return response.choices[0].message.content
+    except Exception as e:
+        st.error(f"Erreur lors de l'appel à l'API OpenAI: {str(e)}")
         return None
 
 def find_matching_service(analyzed_request, tarifs):
