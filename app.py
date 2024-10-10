@@ -1,20 +1,20 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 from tarifs_prestations import get_tarifs
 
-# Configuration de l'API OpenAI (assurez-vous d'avoir défini votre clé API)
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# Configuration du client OpenAI
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 def analyze_request(user_input):
     """Analyse la demande de l'utilisateur avec ChatGPT."""
-    response = openai.ChatCompletion.create(
+    response = client.chat.completions.create(
         model="gpt-3.5-turbo",
         messages=[
             {"role": "system", "content": "Vous êtes un assistant juridique. Identifiez la prestation juridique demandée par l'utilisateur."},
             {"role": "user", "content": user_input}
         ]
     )
-    return response.choices[0].message['content']
+    return response.choices[0].message.content
 
 def find_matching_service(analyzed_request, tarifs):
     """Trouve la prestation correspondante dans la base de données des tarifs."""
